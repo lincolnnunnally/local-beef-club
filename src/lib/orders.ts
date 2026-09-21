@@ -4,7 +4,7 @@ export type Order = {
   name: string;
   email: string;
   phone: string;
-  role: "family" | "individual" | "restaurant" | "catering" | "venue" | "gift";
+  role: "family" | "individual" | "restaurant" | "catering" | "venue" | "gift" | "grocery";
   productId: string;
   dropId: string;
   qty: number;
@@ -13,6 +13,7 @@ export type Order = {
   standingCadence?: "every-drop" | "monthly";
   giftTo?: string;
   notes: string;
+  waitOk: boolean;
   status: "reserved";
 };
 
