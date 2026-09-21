@@ -36,7 +36,7 @@ export type Product = {
   id: string;
   name: string;
   kind: "family" | "steak" | "grill" | "ground" | "freezer" | "premium" | "share" | "bulk" | "gift";
-  audience: Array<"family" | "individual" | "restaurant" | "catering" | "venue" | "gift">;
+  audience: Array<"family" | "individual" | "restaurant" | "catering" | "venue" | "gift" | "grocery">;
   pounds: string;
   price: number;
   priceNote: string;
@@ -51,12 +51,17 @@ export type Drop = {
   processorId: string;
   orderBy: string;
   pickupOn: string;
+  pickupIsEstimate: boolean;
   packagedLb: number;
   committedLb: number;
+  fillFloorLb: number;
   familyBoxesSold: number;
   restaurantLb: number;
-  status: "open" | "filling" | "ready" | "closed";
+  groceryLb: number;
+  status: "open" | "filling" | "harvest-set" | "aging" | "ready" | "closed";
   remainingBoxes: number;
+  ageDays: number;
+  cutPackDays: number;
 };
 
 export const PROCESSORS: Processor[] = [
@@ -212,7 +217,7 @@ export const PRODUCTS: Product[] = [
     id: "bulk",
     name: "Restaurant / Banquet Order",
     kind: "bulk",
-    audience: ["restaurant", "catering", "venue"],
+    audience: ["restaurant", "catering", "venue", "grocery"],
     pounds: "You name the pounds and cuts",
     price: 0,
     priceNote: "Quoted. Complements family boxes so the whole animal sells.",
@@ -229,12 +234,17 @@ export const DROPS: Drop[] = [
     processorId: "mclemore",
     orderBy: "2026-10-10",
     pickupOn: "2026-10-24",
+    pickupIsEstimate: true,
     packagedLb: 465,
     committedLb: 0,
+    fillFloorLb: 350,
     familyBoxesSold: 0,
     restaurantLb: 0,
-    status: "open",
+    groceryLb: 0,
+    status: "filling",
     remainingBoxes: 18,
+    ageDays: 14,
+    cutPackDays: 7,
   },
 ];
 
