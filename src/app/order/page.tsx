@@ -28,6 +28,7 @@ function OrderForm() {
       standingCadence: String(data.get("standingCadence") || "every-drop") as never,
       giftTo: String(data.get("giftTo") || ""),
       notes: String(data.get("notes") || ""),
+      waitOk: data.get("waitOk") === "on",
       status: "reserved",
     });
     setDone(id);
@@ -49,7 +50,7 @@ function OrderForm() {
     <main className="section">
       <p className="eyebrow">One form. We handle the rest.</p>
       <h1>Reserve local beef.</h1>
-      <p className="notice">No charge today. You are claiming a slot on the next drop.</p>
+      <p className="notice">No charge today. You are claiming a slot. Harvest waits until the drop fills, then aging and packing take about three weeks.</p>
       <form onSubmit={onSubmit} className="card" style={{ marginTop: 20 }}>
         <label>Name<input name="name" required placeholder="Your name" /></label>
         <label>Email<input name="email" type="email" required /></label>
@@ -63,6 +64,7 @@ function OrderForm() {
             <option value="catering">Catering</option>
             <option value="venue">Wedding / venue</option>
             <option value="gift">Sending a gift</option>
+            <option value="grocery">A grocery store</option>
           </select>
         </label>
         <label>
@@ -77,7 +79,7 @@ function OrderForm() {
           Which drop
           <select name="dropId" defaultValue={params.get("drop") || DROPS[0].id}>
             {DROPS.map((d) => (
-              <option key={d.id} value={d.id}>{d.title} · ready {d.pickupOn}</option>
+              <option key={d.id} value={d.id}>{d.title} · target {d.pickupOn}</option>
             ))}
           </select>
         </label>
@@ -103,6 +105,10 @@ function OrderForm() {
         </label>
         <label>If this is a gift, who is it for<input name="giftTo" placeholder="Optional" /></label>
         <label>Notes<textarea name="notes" placeholder="Cuts you care about, banquet date, allergies" /></label>
+        <label className="muted">
+          <input name="waitOk" type="checkbox" required style={{ width: "auto", marginRight: 8 }} />
+          I understand we do not harvest until this drop fills, then aging and packing take about three more weeks. The ready date can slide.
+        </label>
         <button className="btn" type="submit" style={{ marginTop: 16 }}>Reserve this drop</button>
       </form>
     </main>
