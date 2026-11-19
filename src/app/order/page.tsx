@@ -2,46 +2,71 @@
 
 import { useSearchParams } from "next/navigation";
 import { FormEvent, Suspense, useState } from "react";
-import { DROPS, PRODUCTS } from "@/lib/catalog";
-import { newId, saveOrder } from "@/lib/orders";
+import { PRODUCTS, SPECIES, dropsFor, productById, speciesLabel } from "@/lib/catalog";
 
 function OrderForm() {
   const params = useSearchParams();
-  const [done, setDone] = useState<string | null>(null);
+  const [done, setDone] = useState<{ ticket: string; emailed: boolean } | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [productId, setProductId] = useState(productById(params.get("product") || "")?.id || "family");
+  const product = productById(productId) || PRODUCTS[0];
+  const drops = dropsFor(product.species);
+  const wantedDrop = params.get("drop") || "";
+  const defaultDrop = drops.some((d) => d.id === wantedDrop) ? wantedDrop : drops[0]?.id || "";
 
-  function onSubmit(e: FormEvent<HTMLFormElement>) {
+  async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    setBusy(true);
+    setError("");
     const data = new FormData(e.currentTarget);
-    const id = newId();
-    saveOrder({
-      id,
-      createdAt: new Date().toISOString(),
-      name: String(data.get("name") || ""),
-      email: String(data.get("email") || ""),
-      phone: String(data.get("phone") || ""),
-      role: String(data.get("role") || "family") as never,
-      productId: String(data.get("productId")),
-      dropId: String(data.get("dropId")),
+    const payload = {
+      name: data.get("name"),
+      email: data.get("email"),
+      phone: data.get("phone"),
+      role: data.get("role"),
+      productId,
+      dropId: data.get("dropId") || "",
       qty: Number(data.get("qty") || 1),
-      fulfillment: String(data.get("fulfillment") || "processor-pickup") as never,
+      bulkLb: Number(data.get("bulkLb") || 0),
+      fulfillment: data.get("fulfillment"),
       standing: data.get("standing") === "on",
-      standingCadence: String(data.get("standingCadence") || "every-drop") as never,
-      giftTo: String(data.get("giftTo") || ""),
-      notes: String(data.get("notes") || ""),
+      standingCadence: data.get("standingCadence"),
+      giftTo: data.get("giftTo"),
+      notes: data.get("notes"),
       waitOk: data.get("waitOk") === "on",
-      status: "reserved",
-    });
-    setDone(id);
+      company: data.get("company"),
+    };
+    try {
+      const res = await fetch("/api/reserve", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.ok) throw new Error(json.message || "Could not save that. Try again.");
+      setDone({ ticket: json.ticket, emailed: Boolean(json.emailed) });
+      window.scrollTo(0, 0);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not save that. Try again.");
+    } finally {
+      setBusy(false);
+    }
   }
 
   if (done) {
     return (
       <main className="section">
-        <p className="eyebrow">Reserved on this device</p>
-        <h1>You are on the list. Ticket {done}.</h1>
+        <p className="eyebrow">Reserved</p>
+        <h1>You are on the list. Ticket {done.ticket}.</h1>
         <p className="lede">
-          Card payment is not live yet — that needs Stripe. This reservation is saved in your browser and on the desk page so we can call you when the first steer is real.
+          Nothing is charged today. We will contact you when the drop fills with the real ready date and final price, before you pay anything.
+          {done.emailed ? " A copy is on its way to your email." : " Keep this ticket number."}
         </p>
+        <div className="row">
+          <a className="btn ghost" href="/drops">See the drops</a>
+          <a className="btn ghost" href="/shop">Back to the boxes</a>
+        </div>
       </main>
     );
   }
@@ -49,8 +74,8 @@ function OrderForm() {
   return (
     <main className="section">
       <p className="eyebrow">One form. We handle the rest.</p>
-      <h1>Reserve local beef.</h1>
-      <p className="notice">No charge today. You are claiming a slot. Harvest waits until the drop fills, then aging and packing take about three weeks.</p>
+      <h1>Reserve local meat.</h1>
+      <p className="notice">No charge today. You are claiming a slot. Harvest waits until the drop fills, then aging and packing take about three weeks. Pork, chicken, and lamb are interest lists until a local farm signs on.</p>
       <form onSubmit={onSubmit} className="card" style={{ marginTop: 20 }}>
         <label>Name<input name="name" required placeholder="Your name" /></label>
         <label>Email<input name="email" type="email" required /></label>
@@ -69,25 +94,33 @@ function OrderForm() {
         </label>
         <label>
           What I want
-          <select name="productId" defaultValue={params.get("product") || "family"}>
-            {PRODUCTS.map((p) => (
-              <option key={p.id} value={p.id}>{p.name}{p.price ? ` · $${p.price}` : ""}</option>
+          <select name="productId" value={productId} onChange={(e) => setProductId(e.target.value)}>
+            {SPECIES.map((sp) => (
+              <optgroup key={sp.id} label={sp.label}>
+                {PRODUCTS.filter((p) => p.species === sp.id).map((p) => (
+                  <option key={p.id} value={p.id}>{p.name}{p.price ? ` · $${p.price}` : p.estLb ? " · interest list" : " · quoted"}</option>
+                ))}
+              </optgroup>
             ))}
           </select>
         </label>
         <label>
           Which drop
-          <select name="dropId" defaultValue={params.get("drop") || DROPS[0].id}>
-            {DROPS.map((d) => (
+          <select name="dropId" key={product.species} defaultValue={defaultDrop}>
+            {drops.map((d) => (
               <option key={d.id} value={d.id}>{d.title} · target {d.pickupOn}</option>
             ))}
+            <option value="">{drops.length ? "Whichever drop is next" : `No ${speciesLabel(product.species).toLowerCase()} drop yet. Put me on the list`}</option>
           </select>
         </label>
         <label>How many boxes / shares<input name="qty" type="number" min={1} defaultValue={1} /></label>
+        {!product.estLb && (
+          <label>About how many pounds<input name="bulkLb" type="number" min={0} placeholder="e.g. 80" /></label>
+        )}
         <label>
           How I get it
           <select name="fulfillment" defaultValue="processor-pickup">
-            <option value="processor-pickup">Pick up at McLemore’s when ready</option>
+            <option value="processor-pickup">{product.species === "beef" ? "Pick up at McLemore’s when ready" : "Pick up at the processor when ready"}</option>
             <option value="processor-hold">Hold frozen at the processor</option>
             <option value="local-delivery">Ask for a short Vidalia-area run</option>
           </select>
@@ -104,12 +137,14 @@ function OrderForm() {
           </select>
         </label>
         <label>If this is a gift, who is it for<input name="giftTo" placeholder="Optional" /></label>
+        <input name="company" tabIndex={-1} autoComplete="off" aria-hidden="true" style={{ position: "absolute", left: "-9999px", width: 1, height: 1 }} />
         <label>Notes<textarea name="notes" placeholder="Cuts you care about, banquet date, allergies" /></label>
         <label className="muted">
           <input name="waitOk" type="checkbox" required style={{ width: "auto", marginRight: 8 }} />
           I understand we do not harvest until this drop fills, then aging and packing take about three more weeks. The ready date can slide.
         </label>
-        <button className="btn" type="submit" style={{ marginTop: 16 }}>Reserve this drop</button>
+        {error && <p className="notice" role="alert">{error}</p>}
+        <button className="btn" type="submit" disabled={busy} style={{ marginTop: 16 }}>{busy ? "Saving…" : drops.length ? "Reserve this drop" : "Put me on the list"}</button>
       </form>
     </main>
   );

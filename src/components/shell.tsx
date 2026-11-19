@@ -10,6 +10,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
             <Link href="/shop">Boxes</Link>
             <Link href="/drops">Drops</Link>
             <Link href="/farms">Farms</Link>
+            <Link href="/sell">For farmers</Link>
             <Link href="/business">Restaurants</Link>
             <Link href="/gift">Gifts</Link>
             <Link href="/standing">Standing</Link>

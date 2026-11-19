@@ -32,9 +32,21 @@ export type Processor = {
   confirmed: boolean;
 };
 
+export type Species = "beef" | "pork" | "chicken" | "lamb";
+
+export const SPECIES: Array<{ id: Species; label: string; note: string }> = [
+  { id: "beef", label: "Beef", note: "First farm and processor in conversation now." },
+  { id: "pork", label: "Pork", note: "Interest list. Opens as a drop when a local hog farm signs on." },
+  { id: "chicken", label: "Chicken", note: "Interest list. Opens as a drop when a pastured-poultry farm signs on." },
+  { id: "lamb", label: "Lamb", note: "Interest list. Opens as a drop when a local sheep farm signs on." },
+];
+
 export type Product = {
   id: string;
   name: string;
+  species: Species;
+  /** Rough packaged pounds per unit, used only for the drop fill meter. 0 = quoted. */
+  estLb: number;
   kind: "family" | "steak" | "grill" | "ground" | "freezer" | "premium" | "share" | "bulk" | "gift";
   audience: Array<"family" | "individual" | "restaurant" | "catering" | "venue" | "gift" | "grocery">;
   pounds: string;
@@ -47,6 +59,7 @@ export type Product = {
 export type Drop = {
   id: string;
   title: string;
+  species: Species;
   farmId: string;
   processorId: string;
   orderBy: string;
@@ -105,6 +118,8 @@ export const FARMS: Farm[] = [
 export const PRODUCTS: Product[] = [
   {
     id: "family",
+    species: "beef",
+    estLb: 22,
     name: "Family Box",
     kind: "family",
     audience: ["family"],
@@ -116,6 +131,8 @@ export const PRODUCTS: Product[] = [
   },
   {
     id: "ground",
+    species: "beef",
+    estLb: 20,
     name: "Ground Beef Box",
     kind: "ground",
     audience: ["family", "individual"],
@@ -127,6 +144,8 @@ export const PRODUCTS: Product[] = [
   },
   {
     id: "steak",
+    species: "beef",
+    estLb: 10,
     name: "Steak Box",
     kind: "steak",
     audience: ["individual", "family", "gift"],
@@ -138,6 +157,8 @@ export const PRODUCTS: Product[] = [
   },
   {
     id: "grill",
+    species: "beef",
+    estLb: 16,
     name: "Grill Box",
     kind: "grill",
     audience: ["family", "gift"],
@@ -149,6 +170,8 @@ export const PRODUCTS: Product[] = [
   },
   {
     id: "freezer",
+    species: "beef",
+    estLb: 40,
     name: "Freezer Box",
     kind: "freezer",
     audience: ["family"],
@@ -160,6 +183,8 @@ export const PRODUCTS: Product[] = [
   },
   {
     id: "premium",
+    species: "beef",
+    estLb: 8,
     name: "Premium Box",
     kind: "premium",
     audience: ["gift", "individual"],
@@ -171,6 +196,8 @@ export const PRODUCTS: Product[] = [
   },
   {
     id: "gift",
+    species: "beef",
+    estLb: 10,
     name: "Gift Box",
     kind: "gift",
     audience: ["gift"],
@@ -182,6 +209,8 @@ export const PRODUCTS: Product[] = [
   },
   {
     id: "quarter",
+    species: "beef",
+    estLb: 110,
     name: "Quarter Beef",
     kind: "share",
     audience: ["family"],
@@ -193,6 +222,8 @@ export const PRODUCTS: Product[] = [
   },
   {
     id: "half",
+    species: "beef",
+    estLb: 220,
     name: "Half Beef",
     kind: "share",
     audience: ["family"],
@@ -204,6 +235,8 @@ export const PRODUCTS: Product[] = [
   },
   {
     id: "whole",
+    species: "beef",
+    estLb: 450,
     name: "Whole Beef",
     kind: "share",
     audience: ["family", "venue"],
@@ -215,6 +248,8 @@ export const PRODUCTS: Product[] = [
   },
   {
     id: "bulk",
+    species: "beef",
+    estLb: 0,
     name: "Restaurant / Banquet Order",
     kind: "bulk",
     audience: ["restaurant", "catering", "venue", "grocery"],
@@ -224,16 +259,82 @@ export const PRODUCTS: Product[] = [
     blurb: "Ground for the line, steaks for Friday, brisket for a rehearsal dinner.",
     contents: ["Ground", "Ribeye", "Strip", "Brisket", "Roasts", "Custom"],
   },
+  {
+    id: "pork-box",
+    species: "pork",
+    estLb: 15,
+    name: "Pork Box",
+    kind: "family",
+    audience: ["family", "individual"],
+    pounds: "About 15 lb",
+    price: 0,
+    priceNote: "Price set when a hog farm signs on. Joining the list costs nothing.",
+    blurb: "Chops, bacon, sausage, and a roast from a hog raised nearby.",
+    contents: ["Chops", "Bacon", "Sausage", "A roast"],
+  },
+  {
+    id: "half-hog",
+    species: "pork",
+    estLb: 90,
+    name: "Half Hog",
+    kind: "share",
+    audience: ["family"],
+    pounds: "About 80–100 lb",
+    price: 0,
+    priceNote: "Price set when a hog farm signs on.",
+    blurb: "Half an animal, cut the way your family cooks.",
+    contents: ["Assorted cuts from one half"],
+  },
+  {
+    id: "chicken-five",
+    species: "chicken",
+    estLb: 20,
+    name: "Pasture Chicken, 5 Birds",
+    kind: "family",
+    audience: ["family", "individual"],
+    pounds: "About 20 lb",
+    price: 0,
+    priceNote: "Price set when a poultry farm signs on. We will say how each batch is processed.",
+    blurb: "Five whole birds for the freezer. Roast one, stock the rest.",
+    contents: ["5 whole chickens"],
+  },
+  {
+    id: "lamb-box",
+    species: "lamb",
+    estLb: 12,
+    name: "Lamb Box",
+    kind: "family",
+    audience: ["family", "individual", "gift"],
+    pounds: "About 12 lb",
+    price: 0,
+    priceNote: "Price set when a sheep farm signs on.",
+    blurb: "Chops, a leg, and ground lamb.",
+    contents: ["Chops", "Leg", "Ground lamb"],
+  },
+  {
+    id: "half-lamb",
+    species: "lamb",
+    estLb: 22,
+    name: "Half Lamb",
+    kind: "share",
+    audience: ["family", "restaurant", "venue"],
+    pounds: "About 20–25 lb",
+    price: 0,
+    priceNote: "Price set when a sheep farm signs on.",
+    blurb: "A whole half, for a family table or an event menu.",
+    contents: ["Assorted cuts from one half"],
+  },
 ];
 
 export const DROPS: Drop[] = [
   {
-    id: "oct-24",
+    id: "beef-1",
     title: "Vidalia Local Beef Drop",
+    species: "beef",
     farmId: "semiema",
     processorId: "mclemore",
-    orderBy: "2026-10-10",
-    pickupOn: "2026-10-24",
+    orderBy: "2026-12-14",
+    pickupOn: "2027-01-04",
     pickupIsEstimate: true,
     packagedLb: 465,
     committedLb: 0,
@@ -254,6 +355,19 @@ export function farmById(id: string) {
 
 export function processorById(id: string) {
   return PROCESSORS.find((p) => p.id === id);
+}
+
+export function priceLabel(p: Product) {
+  if (p.price) return `$${p.price}`;
+  return p.estLb ? "Interest list" : "Quoted";
+}
+
+export function speciesLabel(id: string) {
+  return SPECIES.find((s) => s.id === id)?.label || id;
+}
+
+export function dropsFor(species: Species) {
+  return DROPS.filter((d) => d.species === species && d.status !== "closed");
 }
 
 export function productById(id: string) {
