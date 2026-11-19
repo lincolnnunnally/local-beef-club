@@ -5,7 +5,7 @@ import { Shell } from "@/components/shell";
 export const metadata: Metadata = {
   title: "Local Beef Club — Vidalia",
   description:
-    "Know your farmer. Know your food. Scheduled local beef drops from South Georgia ranches, processed in Vidalia, picked up at the processor.",
+    "Know your farmer. Know your food. Scheduled local beef drops from South Georgia ranches, processed in Vidalia, picked up at the processor. Pork, chicken, and lamb lists open now.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

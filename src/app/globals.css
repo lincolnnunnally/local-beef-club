@@ -60,3 +60,10 @@ textarea { min-height: 90px; }
 .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 6px; }
 .dot.green { background: var(--ok); }
 .dot.yellow { background: var(--warn); }
+.meter { height: 10px; border-radius: 999px; background: #0f0d0a; border: 1px solid var(--line); overflow: hidden; margin: 6px 0 4px; max-width: 420px; }
+.meter span { display: block; height: 100%; background: var(--gold); }
+.btn:disabled { opacity: .6; cursor: wait; }
+@media (max-width: 640px) {
+  .nav { position: static; }
+  .table { display: block; overflow-x: auto; }
+}

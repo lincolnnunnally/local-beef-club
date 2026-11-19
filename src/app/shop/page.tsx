@@ -1,26 +1,38 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
-import { PRODUCTS } from "@/lib/catalog";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useMemo, useState } from "react";
+import { PRODUCTS, SPECIES, priceLabel } from "@/lib/catalog";
 
-export default function ShopPage() {
+function Shop() {
+  const params = useSearchParams();
+  const [species, setSpecies] = useState(SPECIES.some((s) => s.id === params.get("species")) ? String(params.get("species")) : "all");
   const [kind, setKind] = useState("all");
   const [audience, setAudience] = useState("all");
   const items = useMemo(
     () =>
-      PRODUCTS.filter((p) => (kind === "all" ? true : p.kind === kind)).filter((p) =>
-        audience === "all" ? true : p.audience.includes(audience as never)
-      ),
-    [kind, audience]
+      PRODUCTS.filter((p) => (species === "all" ? true : p.species === species))
+        .filter((p) => (kind === "all" ? true : p.kind === kind))
+        .filter((p) => (audience === "all" ? true : p.audience.includes(audience as never))),
+    [species, kind, audience]
   );
 
   return (
     <main className="section">
       <p className="eyebrow">Choose what you actually cook</p>
       <h1>Boxes, shares, and bulk.</h1>
-      <p className="lede">Prices are targets until the first animal math is real. Inventory will not sell more ribeyes than one steer has.</p>
+      <p className="lede">Prices are targets until the first animal math is real. Inventory will not sell more ribeyes than one steer has. Pork, chicken, and lamb open as drops when a local farm signs on. Join the list now and nothing is charged.</p>
       <div className="grid" style={{ margin: "20px 0" }}>
+        <label>
+          Which meat
+          <select value={species} onChange={(e) => setSpecies(e.target.value)}>
+            <option value="all">All</option>
+            {SPECIES.map((s) => (
+              <option key={s.id} value={s.id}>{s.label}</option>
+            ))}
+          </select>
+        </label>
         <label>
           What kind
           <select value={kind} onChange={(e) => setKind(e.target.value)}>
@@ -52,14 +64,22 @@ export default function ShopPage() {
         {items.map((p) => (
           <article className="card" key={p.id}>
             <h3>{p.name}</h3>
-            <p>{p.price ? `$${p.price}` : "Quoted"} · {p.pounds}</p>
+            <p>{priceLabel(p)} · {p.pounds}</p>
             <p className="muted">{p.blurb}</p>
             <p>{p.contents.join(" · ")}</p>
             <p className="muted">{p.priceNote}</p>
-            <Link className="btn" href={`/order?product=${p.id}`}>Reserve</Link>
+            <Link className="btn" href={`/order?product=${p.id}`}>{p.price || !p.estLb ? "Reserve" : "Join the list"}</Link>
           </article>
         ))}
       </div>
     </main>
+  );
+}
+
+export default function ShopPage() {
+  return (
+    <Suspense>
+      <Shop />
+    </Suspense>
   );
 }

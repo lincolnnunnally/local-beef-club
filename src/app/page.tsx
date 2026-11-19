@@ -1,8 +1,14 @@
 import Link from "next/link";
-import { DROPS, FARMS, PRODUCTS } from "@/lib/catalog";
+import { DROPS, FARMS, PRODUCTS, SPECIES, priceLabel } from "@/lib/catalog";
+import { publicCounts } from "@/lib/db";
 
-export default function Home() {
+export const revalidate = 30;
+
+export default async function Home() {
   const drop = DROPS[0];
+  const counts = await publicCounts();
+  const reservedLb = Math.round(drop.committedLb + (counts.drops[drop.id]?.lb || 0));
+  const fillPct = Math.min(100, Math.round((reservedLb / drop.fillFloorLb) * 100));
   return (
     <main>
       <section className="hero">
@@ -34,7 +40,11 @@ export default function Home() {
         <div className="card">
           <h2>{drop.title}</h2>
           <p>Order by {drop.orderBy}. Pickup {drop.pickupOn} at McLemore’s, Vidalia — or hold frozen there.</p>
-          <p className="muted">{drop.remainingBoxes} family-box slots sketched. Numbers go live after the first steer is confirmed.</p>
+          <p>
+            {reservedLb} of {drop.fillFloorLb} lb reserved. The steer moves when the drop fills.
+          </p>
+          <div className="meter" aria-hidden="true"><span style={{ width: `${fillPct}%` }} /></div>
+          <p className="muted">Ready date is an estimate until the drop fills. Nothing is charged to reserve.</p>
           <div className="row">
             <Link className="btn" href="/drops">Open this drop</Link>
             <Link className="btn ghost" href="/farms">{FARMS[0].name}</Link>
@@ -47,10 +57,36 @@ export default function Home() {
           {PRODUCTS.filter((p) => ["family", "ground", "steak", "bulk"].includes(p.kind)).map((p) => (
             <article className="card" key={p.id}>
               <h3>{p.name}</h3>
-              <p>{p.price ? `$${p.price}` : "Quoted"} · {p.pounds}</p>
+              <p>{priceLabel(p)} · {p.pounds}</p>
               <p className="muted">{p.blurb}</p>
             </article>
           ))}
+        </div>
+      </section>
+      <section className="section">
+        <p className="eyebrow">More than beef</p>
+        <h2>Pork, chicken, and lamb are next.</h2>
+        <p className="lede">Each opens as its own drop once a local farm signs on. Join a list now. It costs nothing, and it tells farmers the buyers are here.</p>
+        <div className="grid">
+          {SPECIES.filter((sp) => sp.id !== "beef").map((sp) => {
+            const waiting = counts.species[sp.id] || 0;
+            return (
+              <Link className="card" key={sp.id} href={`/shop?species=${sp.id}`}>
+                <h3>{sp.label}</h3>
+                <p className="muted">{waiting ? `${waiting} neighbor${waiting === 1 ? "" : "s"} on the list.` : "Be the first on the list."}</p>
+              </Link>
+            );
+          })}
+        </div>
+      </section>
+      <section className="section">
+        <div className="card">
+          <p className="eyebrow">Farmers and ranchers</p>
+          <h2>Raise cattle, hogs, chickens, or sheep near Vidalia?</h2>
+          <p>We fill your animal with reservations before it goes to the processor. Your farm&apos;s name on it, your practices in your words.</p>
+          <div className="row">
+            <Link className="btn" href="/sell">Sell through the club</Link>
+          </div>
         </div>
       </section>
     </main>
